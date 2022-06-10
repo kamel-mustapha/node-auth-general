@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import { BadRequestError } from "../errors";
 import { User } from "../models";
 import { PasswordHash } from "../services";
-import passport from "passport";
 
 export const currentUser = async (req: Request, res: Response) => {
   res.send({ user: req.user || null });
@@ -36,16 +35,20 @@ export const signUp = async (req: Request, res: Response) => {
 };
 
 export const signIn = async (req: Request, res: Response) => {
+
   const { email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
+
   if (!existingUser) throw new BadRequestError("Invalid credentials");
 
   const passwordsMatch = await PasswordHash.compare(
     existingUser.password,
     password
   );
+
   if (!passwordsMatch) throw new BadRequestError("Invalid credentials");
+
   const userJwt = jwt.sign(
     {
       id: existingUser.id,
@@ -57,6 +60,7 @@ export const signIn = async (req: Request, res: Response) => {
   req.session = {
     jwt: userJwt,
   };
+  
   console.log(req.session);
 
   res.status(200).send(existingUser);
