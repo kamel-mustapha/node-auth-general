@@ -6,13 +6,13 @@ interface UserPayload {
   email: string;
 }
 
-// declare global {
-//   namespace Express {
-//     interface Request {
-//       currentUser?: UserPayload;
-//     }
-//   }
-// }
+declare global {
+  namespace Express {
+    interface Request {
+      user?: UserPayload;
+    }
+  }
+}
 
 export const currentUser = (
   req: Request,
@@ -20,6 +20,7 @@ export const currentUser = (
   next: NextFunction
 ) => {
   if (!req.session?.jwt) return next();
+
   try {
     const payload = jwt.verify(
       req.session.jwt,
@@ -28,5 +29,6 @@ export const currentUser = (
     console.log(payload);
     req.user = payload;
   } catch (err) {}
+  
   next();
 };
