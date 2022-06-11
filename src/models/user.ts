@@ -55,6 +55,8 @@ const userSchema = new mongoose.Schema(
         ret.id = ret._id;
         ret.fullName = { firstName: ret.firstName, lastName: ret.lastName };
         delete ret._id;
+        delete ret.firstName;
+        delete ret.lastName;
         delete ret.password;
         delete ret.__v;
       },
