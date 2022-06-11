@@ -1,11 +1,12 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { findUsersPL } from "../AggPipeLines/auth";
 import { BadRequestError } from "../errors";
 import { User } from "../models";
 import { PasswordHash } from "../services";
 
 export const currentUser = async (req: Request, res: Response) => {
-  res.send({currentUser: req.user || null});
+  res.send({ currentUser: req.user || null });
 };
 
 export const signUp = async (req: Request, res: Response) => {
@@ -35,10 +36,9 @@ export const signUp = async (req: Request, res: Response) => {
 };
 
 export const signIn = async (req: Request, res: Response) => {
-
   const { email, password } = req.body;
 
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email }).select("+password");
 
   if (!existingUser) throw new BadRequestError("Invalid credentials");
 
@@ -66,4 +66,44 @@ export const signIn = async (req: Request, res: Response) => {
 export const signOut = async (req: Request, res: Response) => {
   req.session = null;
   res.send({});
+};
+
+export const updateUser = async (req: Request, res: Response) => {
+  const user = await User.findById(req.params.id);
+  if (!user) throw new BadRequestError("Invalid credentials");
+  user.set(req.body);
+  user.save();
+  res.status(200).send(user);
+};
+
+export const updateUserPassword = async (req: Request, res: Response) => {
+  const { password, newPassword } = req.body;
+  const user = await User.findById(req.params.id).select("+password");
+  if (!user) throw new BadRequestError("Invalid credentials");
+  const passwordsMatch = await PasswordHash.compare(user.password, password);
+  if (!passwordsMatch) throw new BadRequestError("Invalid credentials");
+  user.set({ password: newPassword });
+  user.save();
+  res.status(200).send({});
+};
+
+export const getUser = async (req: Request, res: Response) => {
+  const user = await User.findById(req.params.id);
+  if (!user) throw new BadRequestError("Invalid credentials");
+  res.status(200).send(user);
+};
+
+export const deleteUser = async (req: Request, res: Response) => {
+  const user = await User.findById(req.params.id);
+  if (!user) throw new BadRequestError("Invalid credentials");
+  user.remove();
+  res.status(204).send({});
+};
+
+export const findUsers = async (req: Request, res: Response) => {
+  const users = await User.aggregate(
+    findUsersPL(req.params.id, req.body.input)
+  );
+  if (!users) throw new BadRequestError("Invalid credentials");
+  res.status(200).send(users);
 };
