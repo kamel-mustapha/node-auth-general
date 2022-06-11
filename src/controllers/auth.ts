@@ -5,7 +5,7 @@ import { User } from "../models";
 import { PasswordHash } from "../services";
 
 export const currentUser = async (req: Request, res: Response) => {
-  res.send({ user: req.user || null });
+  res.send({currentUser: req.user || null});
 };
 
 export const signUp = async (req: Request, res: Response) => {
@@ -60,18 +60,10 @@ export const signIn = async (req: Request, res: Response) => {
   req.session = {
     jwt: userJwt,
   };
-  
-  console.log(req.session);
-
   res.status(200).send(existingUser);
 };
 
 export const signOut = async (req: Request, res: Response) => {
   req.session = null;
   res.send({});
-};
-
-export const googleSignIn = async (req: Request, res: Response) => {
-  console.log("i have reached this point");
-  res.status(201).send("test the controller");
 };
