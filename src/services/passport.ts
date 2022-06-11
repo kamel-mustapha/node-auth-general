@@ -1,7 +1,6 @@
 import passport from "passport";
 import { Strategy } from "passport-google-oauth20";
 import { User } from "../models/index";
-import jwt from "jsonwebtoken";
 
 declare global {
   namespace Express {
@@ -17,25 +16,11 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
-  if (user) done(null, user);
+  // const user = await User.findById(id);
+  // if (user) done(null, user);
 });
 
-/*
-interface UserPayload {
-  id: string;
-  email: string;
-}
 
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-
-passport.deserializeUser(async (payload: any, done) => {
-  const user = payload as UserPayload;
-  if (user) done(null, user);
-});
-*/
 passport.use(
   new Strategy(
     {
@@ -44,6 +29,7 @@ passport.use(
       callbackURL: "/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
+      
       const existingUser = await User.findOne({ googleId: profile.id });
       if (existingUser) {
         return done(null, existingUser);
@@ -52,7 +38,7 @@ passport.use(
         firstName: profile.name?.givenName!,
         lastName: profile.name?.familyName!,
         email: profile._json.email!,
-        password: "123456",
+        password: process.env.GOOGLE_DEFAULT_PASSWORD! || "123",
         googleId: profile.id!,
       });
       await user.save();
@@ -60,22 +46,4 @@ passport.use(
     }
   )
 );
-/*
-global.signin = () => {
-  // Build a JWT payload. {id, email}
-  const payload = {
-    id: new mongoose.Types.ObjectId().toHexString(),
-    email: "test@gmail.com",
-  };
-  // Create the JWT!
-  const token = jwt.sign(payload, process.env.JWT_KEY!);
-  // Build session Object {jwt: MY_JWT}
-  const session = { jwt: token };
-  //turn that session into JSON
-  const sessionJSON = JSON.stringify(session);
-  //Take that JSON and encode it as base64
-  const base64 = Buffer.from(sessionJSON).toString("base64");
-  //return string thats the cookie with the encoded data
-  return [`session=${base64}`];
-};
-*/
+
