@@ -4,18 +4,47 @@ import {
   signIn,
   signUp,
   signOut,
+  updateUser,
+  updateUserPassword,
+  deleteUser,
+  getUser,
+  findUsers,
 } from "../controllers/auth";
-import { signInValidator, signUpValidator } from "../validators/auth";
+import {
+  findUsersValidator,
+  signInValidator,
+  signUpValidator,
+  updatePasswordValidator,
+  updateUserValidator,
+  userIdValidator,
+} from "../validators/auth";
 import { requireAuth, validateRequest } from "../middlewares";
 import passport from "passport";
 
 const router = express.Router();
 
-router.get("/currentuser", currentUser);
 router.post("/signup", signUpValidator, validateRequest, signUp);
 router.post("/signin", signInValidator, validateRequest, signIn);
 router.post("/signout", signOut);
-router.get("/google", passport.authenticate("google", {scope: ["email", "profile"]}));
+router.get("/currentuser", currentUser);
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["email", "profile"] })
+);
+
+router
+  .route("/users/:id")
+  .get(userIdValidator, validateRequest, getUser)
+  .put(updateUserValidator, validateRequest, updateUser)
+  .delete(userIdValidator, validateRequest, deleteUser)
+  .post(findUsersValidator, validateRequest, findUsers);
+
+router.put(
+  "/password/:id",
+  updatePasswordValidator,
+  validateRequest,
+  updateUserPassword
+);
 
 router.get("/require", requireAuth, (req, res) => {
   console.log("you are here");
