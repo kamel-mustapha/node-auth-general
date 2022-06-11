@@ -43,6 +43,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
+      select: false,
       required: true,
     },
     googleId: {
@@ -70,6 +71,20 @@ userSchema.pre("save", async function (done) {
     this.set("password", hashed);
   }
 });
+
+userSchema
+  .virtual("fullName")
+  .get(function () {
+    return `${this.firstName} ${this.lastName}`;
+  })
+  .set(function (v) {
+    // `v` is the value being set, so use the value to set
+    // `firstName` and `lastName`.
+    const firstName = v.substring(0, v.indexOf(" "));
+    const lastName = v.substring(v.indexOf(" ") + 1);
+    this.set({ firstName, lastName });
+    console.log("hello world here");
+  });
 
 userSchema.statics.build = (attrs: UserAttrs) => {
   return new User(attrs);
