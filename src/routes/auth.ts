@@ -9,6 +9,8 @@ import {
   deleteUser,
   getUser,
   findUsers,
+  sendPhoneSMS,
+  confirmPhone,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -17,6 +19,8 @@ import {
   updatePasswordValidator,
   updateUserValidator,
   userIdValidator,
+  phoneValidator,
+  confirmPhoneValidator,
 } from "../validators/auth";
 import { requireAuth, validateRequest } from "../middlewares";
 import passport from "passport";
@@ -44,6 +48,14 @@ router.put(
   updatePasswordValidator,
   validateRequest,
   updateUserPassword
+);
+
+router.post("/sendPhoneCode", phoneValidator, validateRequest, sendPhoneSMS);
+router.post(
+  "/confirmPhone",
+  confirmPhoneValidator,
+  validateRequest,
+  confirmPhone
 );
 
 router.get("/require", requireAuth, (req, res) => {
