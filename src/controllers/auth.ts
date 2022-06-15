@@ -3,7 +3,12 @@ import jwt from "jsonwebtoken";
 import { findUsersPL } from "../AggPipeLines/auth";
 import { BadRequestError } from "../errors";
 import { User } from "../models";
-import { PasswordHash } from "../services";
+import {
+  PasswordHash,
+  sendPhoneCode,
+  verifyPhoneCode,
+  TWILIO_STATUS,
+} from "../services";
 
 export const currentUser = async (req: Request, res: Response) => {
   res.send({ currentUser: req.user || null });
@@ -106,4 +111,34 @@ export const findUsers = async (req: Request, res: Response) => {
   );
   if (!users) throw new BadRequestError("Invalid credentials");
   res.status(200).send(users);
+};
+
+export const sendPhoneSMS = async (req: Request, res: Response) => {
+  const { phone } = req.body;
+
+  const existingPhone = await User.findOne({ phone });
+  if (existingPhone) throw new BadRequestError("Phone number in use");
+
+  const status = await sendPhoneCode(phone);
+
+  if (status == TWILIO_STATUS.PENDING) return res.status(201).send({ phone });
+  throw new BadRequestError("Try Again");
+};
+
+export const confirmPhone = async (req: Request, res: Response) => {
+  const { id, phone, code } = req.body;
+
+  const user = await User.findById(id);
+  if (!user) throw new BadRequestError("Invalid user");
+
+  const status = await verifyPhoneCode(phone, code);
+
+  if (status == TWILIO_STATUS.REJECTED)
+    throw new BadRequestError("Wrong verification code");
+  if (status == TWILIO_STATUS.APPROVED) {
+    user.set({ phone });
+    user.save();
+    return res.status(200).send(user);
+  }
+  throw new BadRequestError("Please try later!");
 };
