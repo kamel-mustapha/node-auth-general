@@ -62,3 +62,20 @@ export const findUsersValidator = [
     .isLength({ min: 1, max: 50 })
     .withMessage("you must supply a valid full name"),
 ];
+
+export const phoneValidator = [
+  body("id").isMongoId().withMessage("Invalid ID"),
+  body("phone")
+    .isMobilePhone("any")
+    .withMessage("you must supply a valid phone"),
+];
+
+export const confirmPhoneValidator = [
+  body("id").isMongoId().withMessage("Invalid ID"),
+  body("phone")
+    .isMobilePhone("any")
+    .withMessage("you must supply a valid phone"),
+  body("code")
+    .isLength({ min: 1, max: 10 })
+    .withMessage("you must supply a valid code"),
+];
