@@ -11,6 +11,7 @@ import {
   findUsers,
   sendPhoneSMS,
   confirmPhone,
+  sendEmailCode,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -21,6 +22,7 @@ import {
   userIdValidator,
   phoneValidator,
   confirmPhoneValidator,
+  emailValidator,
 } from "../validators/auth";
 import { requireAuth, validateRequest } from "../middlewares";
 import passport from "passport";
@@ -49,6 +51,8 @@ router.put(
   validateRequest,
   updateUserPassword
 );
+
+router.post("/sendEmailCode", emailValidator, validateRequest, sendEmailCode);
 
 router.post("/sendPhoneCode", phoneValidator, validateRequest, sendPhoneSMS);
 router.post(
