@@ -8,7 +8,12 @@ import {
   sendPhoneCode,
   verifyPhoneCode,
   TWILIO_STATUS,
+  sendEmail,
 } from "../services";
+
+import { confirmationEmail } from "../types/email";
+
+import client from "../services/redis";
 
 export const currentUser = async (req: Request, res: Response) => {
   res.send({ currentUser: req.user || null });
@@ -141,4 +146,42 @@ export const confirmPhone = async (req: Request, res: Response) => {
     return res.status(200).send(user);
   }
   throw new BadRequestError("Please try later!");
+};
+
+export const sendEmailCode = async (req: Request, res: Response) => {
+  const { id, email } = req.body;
+
+  const existingEmail = await User.findOne({ email });
+
+  if (existingEmail) throw new BadRequestError("Email in use");
+
+  const code = Math.floor(100000 + Math.random() * 900000);
+
+  const options = confirmationEmail(email, code);
+
+  const response = await sendEmail(options);
+
+  if (!response) throw new BadRequestError("Couldn't send Email");
+
+  await client.setEx(email, 60 * 5, JSON.stringify(code));
+
+  res.status(201).send({ email });
+};
+
+export const confirmEmail = async (req: Request, res: Response) => {
+  const { id, email, code } = req.body;
+
+  const value = await client.get(email);
+
+  if (!value) throw new BadRequestError("Code expired");
+
+  if (value != code) throw new BadRequestError("Wrong code");
+
+  const user = await User.findById(id);
+
+  if (!user) throw new BadRequestError("Wrong user ID");
+
+  user.set({ email });
+  user.save();
+  res.status(201).send(user);
 };
