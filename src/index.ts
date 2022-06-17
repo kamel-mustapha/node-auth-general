@@ -2,6 +2,7 @@ import "dotenv/config";
 import "./services/passport";
 import app from "./app";
 import mongoose from "mongoose";
+import redis from "./services/redis";
 
 const start = async () => {
   const PORT = process.env.PORT || 3000;
@@ -11,6 +12,14 @@ const start = async () => {
     throw new Error("GOOGLE_CLIENT_SECRET must be provided");
   if (!process.env.JWT_KEY) throw new Error("JWT must be provided");
   if (!process.env.MONGO_URI) throw new Error("MONGO-URI must be provided");
+
+  try {
+    await redis.connect();
+    console.log("connected to Redis");
+  } catch (err) {
+    console.error(err);
+  }
+
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("connected to mongodb Uri :", process.env.MONGO_URI);

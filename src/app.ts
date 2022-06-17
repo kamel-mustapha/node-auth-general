@@ -26,22 +26,24 @@ app.use(currentUser);
 
 app.use("/api/v1/auth", authRouter);
 
-app.get("/auth/google/callback", passport.authenticate("google", {scope: ["email", "profile"]}),
-function(req, res) {
-  
-  const userJwt = jwt.sign(
-    {
-      id: req.user?.id,
-      email: req.user?.email,
-    },
-    process.env.JWT_KEY!
-  );
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { scope: ["email", "profile"] }),
+  function (req, res) {
+    const userJwt = jwt.sign(
+      {
+        id: req.user?.id,
+        email: req.user?.email,
+      },
+      process.env.JWT_KEY!
+    );
 
-  req.session = {
-    jwt: userJwt
-  };
+    req.session = {
+      jwt: userJwt,
+    };
     res.send(req.user);
-});
+  }
+);
 
 app.use(errorHandler);
 
