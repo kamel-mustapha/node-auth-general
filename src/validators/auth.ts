@@ -79,3 +79,8 @@ export const confirmPhoneValidator = [
     .isLength({ min: 1, max: 10 })
     .withMessage("you must supply a valid code"),
 ];
+
+export const emailValidator = [
+  body("id").isMongoId().withMessage("Invalid ID"),
+  body("email").isEmail().withMessage("you must supply a valid code"),
+];
