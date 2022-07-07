@@ -5,7 +5,7 @@ class redis {
   private constructor() {}
   public static getRedisInstance(): RedisClientType {
     if (!this.client) {
-      this.client = createClient();
+      this.client = createClient({ url: process.env.REDIS_URI! });
     }
     return this.client;
   }

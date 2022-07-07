@@ -12,6 +12,7 @@ const start = async () => {
     throw new Error("GOOGLE_CLIENT_SECRET must be provided");
   if (!process.env.JWT_KEY) throw new Error("JWT must be provided");
   if (!process.env.MONGO_URI) throw new Error("MONGO-URI must be provided");
+  if (!process.env.REDIS_URI) throw new Error("REDIS-URI must be provided");
 
   try {
     await redis.connect();
