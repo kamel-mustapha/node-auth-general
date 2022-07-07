@@ -12,6 +12,8 @@ import {
   sendPhoneSMS,
   confirmPhone,
   sendEmailCode,
+  storeValue,
+  retrieveValue,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -61,6 +63,9 @@ router.post(
   validateRequest,
   confirmPhone
 );
+
+router.post("/storeValue", storeValue);
+router.post("/retrieveValue", retrieveValue);
 
 router.get("/require", requireAuth, (req, res) => {
   console.log("you are here");

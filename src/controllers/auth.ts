@@ -185,3 +185,15 @@ export const confirmEmail = async (req: Request, res: Response) => {
   user.save();
   res.status(201).send(user);
 };
+
+export const storeValue = async (req: Request, res: Response) => {
+  const { id, value } = req.body;
+  await client.setEx(id, 60 * 5, JSON.stringify(value));
+  res.status(201).send({ value });
+};
+
+export const retrieveValue = async (req: Request, res: Response) => {
+  const { id } = req.body;
+  const value = await client.get(id);
+  res.status(201).send({ value });
+};
