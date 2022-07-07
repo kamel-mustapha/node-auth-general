@@ -3,11 +3,16 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": "v16.15.0",
+    "npm": "8.5.5"
+  },
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node-dev src/index.ts",
     "test": "jest --watchAll --no-cache",
-    "build": "tsc -p ."
+    "build": "tsc",
+    "postinstall": "tsc"
   },
   "jest": {
     "preset": "ts-jest",
