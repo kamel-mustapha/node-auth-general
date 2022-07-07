@@ -195,5 +195,6 @@ export const storeValue = async (req: Request, res: Response) => {
 export const retrieveValue = async (req: Request, res: Response) => {
   const { id } = req.body;
   const value = await client.get(id);
-  res.status(201).send({ value });
+  const timeLeft = await client.ttl(id);
+  res.status(201).send({ value, timeLeft });
 };

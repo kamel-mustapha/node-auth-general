@@ -1,5 +1,5 @@
 import express from "express";
-import { Request, Response, NextFunction } from "express";
+import path from "path";
 import "express-async-errors";
 import { json } from "body-parser";
 import cookieSession from "cookie-session";
@@ -9,12 +9,14 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 
 const app = express();
+
+app.use("/public", express.static(path.join(__dirname, "public")));
+
 app.use(json());
 
 app.use(
   cookieSession({
-    // signed: false,
-    // secure: false,
+    // signed: false, secure: false,
     maxAge: 24 * 60 * 60 * 1000,
     keys: [process.env.COOKIE_KEY!],
   })

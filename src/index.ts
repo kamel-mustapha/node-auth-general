@@ -6,6 +6,7 @@ import redis from "./services/redis";
 
 const start = async () => {
   const PORT = process.env.PORT || 3000;
+
   if (!process.env.GOOGLE_CLIENT_ID)
     throw new Error("GOOGLE_CLIENT_ID must be provided");
   if (!process.env.GOOGLE_CLIENT_SECRET)
