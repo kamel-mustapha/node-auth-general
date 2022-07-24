@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import validate from "deep-email-validator";
 import { findUsersPL } from "../AggPipeLines/auth";
 import { BadRequestError } from "../errors";
 import { User } from "../models";
@@ -20,10 +21,18 @@ export const currentUser = async (req: Request, res: Response) => {
 };
 
 export const signUp = async (req: Request, res: Response) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, code } = req.body;
 
   const existingUser = await User.findOne({ email });
+
   if (existingUser) throw new BadRequestError("Email in use");
+
+  const value = await client.get(email);
+
+  if (!value) throw new BadRequestError("Code expired");
+
+  if (value != code) throw new BadRequestError("Wrong code");
+
   const user = User.build({
     firstName,
     lastName,
@@ -149,7 +158,12 @@ export const confirmPhone = async (req: Request, res: Response) => {
 };
 
 export const sendEmailCode = async (req: Request, res: Response) => {
-  const { id, email } = req.body;
+  const { email } = req.body;
+
+  let result = await validate(email);
+
+  if (!result.valid)
+    throw new BadRequestError("Email is wrong or doesn't exist");
 
   const existingEmail = await User.findOne({ email });
 

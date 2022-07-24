@@ -41,7 +41,7 @@ const createTransporter = async () => {
   return transporter;
 };
 
-export const sendEmail = async (emailOptions: object) => {
+export const sendEmail = async (emailOptions: any) => {
   let success = true;
   let emailTransporter = await createTransporter();
 
@@ -53,4 +53,16 @@ export const sendEmail = async (emailOptions: object) => {
     success = true;
   });
   return success;
+};
+
+export const sendEmailTest = async () => {
+  let emailOptions = {
+    subject: "Test",
+    text: "I am sending an email from nodemailer!",
+    to: "hosni.bounechada@gmail.com",
+    from: "hosniboun@gmail.com",
+  };
+
+  let emailTransporter = await createTransporter();
+  await emailTransporter.sendMail(emailOptions);
 };

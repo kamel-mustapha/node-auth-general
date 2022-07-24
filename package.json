@@ -19,14 +19,17 @@
     "testEnvironment": "node",
     "testTimeout": 60000,
     "setupFilesAfterEnv": [
-      "./src/test/setup.ts"
+      "./src/test/setup.ts",
+      "./src/test/jest.setup.redis-mock.ts"
     ]
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/redis-mock": "^0.17.1",
     "cookie-session": "^2.0.0",
+    "deep-email-validator": "^0.1.21",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "express-async-errors": "^3.1.1",
@@ -35,7 +38,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.3.1",
     "nodemailer": "^6.7.5",
-    "passport": "^0.5.2",
+    "passport": "^0.6.0",
     "passport-google-oauth20": "^2.0.0",
     "redis": "^4.1.0",
     "twilio": "^3.77.2",
@@ -52,6 +55,7 @@
     "@types/supertest": "^2.0.12",
     "jest": "^27.5.1",
     "mongodb-memory-server": "^8.5.1",
+    "redis-mock": "^0.56.3",
     "supertest": "^6.2.2",
     "ts-jest": "^27.1.4",
     "ts-node-dev": "^1.1.8"

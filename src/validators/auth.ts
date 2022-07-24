@@ -22,6 +22,10 @@ export const signUpValidator = [
     .notEmpty()
     .isLength({ min: 6, max: 50 })
     .withMessage("you must supply a valid password"),
+  body("code")
+    .isNumeric()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("you must supply Email verification code"),
 ];
 
 export const updateUserValidator = [
@@ -34,7 +38,7 @@ export const updateUserValidator = [
     .isLength({ min: 1, max: 25 })
     .optional()
     .withMessage("you must supply a valid last name"),
-  body("email").optional().isEmail().withMessage("Email must be valid"),
+  body("email").not().exists().withMessage("Invalid Input"),
   check("password").not().exists().withMessage("Invalid Input"),
 ];
 
@@ -81,6 +85,5 @@ export const confirmPhoneValidator = [
 ];
 
 export const emailValidator = [
-  body("id").isMongoId().withMessage("Invalid ID"),
   body("email").isEmail().withMessage("you must supply a valid code"),
 ];

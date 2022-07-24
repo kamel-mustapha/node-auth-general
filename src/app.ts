@@ -7,12 +7,15 @@ import { currentUser, errorHandler } from "./middlewares";
 import authRouter from "./routes/auth";
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import { sendEmailTest } from "./services";
 
 const app = express();
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use(json());
+
+app.get("/sendEmailTest", sendEmailTest);
 
 app.use(
   cookieSession({
@@ -27,7 +30,6 @@ app.use(passport.session());
 app.use(currentUser);
 
 app.use("/api/v1/auth", authRouter);
-
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", { scope: ["email", "profile"] }),

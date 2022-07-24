@@ -14,6 +14,7 @@ import {
   sendEmailCode,
   storeValue,
   retrieveValue,
+  confirmEmail,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -42,19 +43,21 @@ router.get(
 
 router
   .route("/users/:id")
-  .get(userIdValidator, validateRequest, getUser)
-  .put(updateUserValidator, validateRequest, updateUser)
-  .delete(userIdValidator, validateRequest, deleteUser)
-  .post(findUsersValidator, validateRequest, findUsers);
+  .get(requireAuth, userIdValidator, validateRequest, getUser)
+  .put(requireAuth, updateUserValidator, validateRequest, updateUser)
+  .delete(requireAuth, userIdValidator, validateRequest, deleteUser)
+  .post(requireAuth, findUsersValidator, validateRequest, findUsers);
 
 router.put(
   "/password/:id",
+  requireAuth,
   updatePasswordValidator,
   validateRequest,
   updateUserPassword
 );
 
 router.post("/sendEmailCode", emailValidator, validateRequest, sendEmailCode);
+router.post("/confirmEmailCode", confirmEmail);
 
 router.post("/sendPhoneCode", phoneValidator, validateRequest, sendPhoneSMS);
 router.post(
