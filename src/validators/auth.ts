@@ -56,6 +56,23 @@ export const updatePasswordValidator = [
     .withMessage("you must supply a valid password"),
 ];
 
+export const forgotPasswordValidator = [
+  body("email").isEmail().withMessage("you must supply a valid code"),
+];
+
+export const resetPasswordValidator = [
+  body("email").isEmail().withMessage("Email must be valid"),
+  body("password")
+    .trim()
+    .notEmpty()
+    .isLength({ min: 6, max: 50 })
+    .withMessage("you must supply a valid password"),
+  body("code")
+    .isNumeric()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("you must supply Email verification code"),
+];
+
 export const userIdValidator = [
   param("id").isMongoId().withMessage("Invalid ID"),
 ];

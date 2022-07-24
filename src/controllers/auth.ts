@@ -12,7 +12,7 @@ import {
   sendEmail,
 } from "../services";
 
-import { confirmationEmail } from "../types/email";
+import { confirmationEmail, resetPasswordEmail } from "../types/email";
 
 import client from "../services/redis";
 
@@ -104,6 +104,46 @@ export const updateUserPassword = async (req: Request, res: Response) => {
   user.set({ password: newPassword });
   user.save();
   res.status(200).send({});
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  const existingUser = await User.findOne({ email });
+
+  if (!existingUser) throw new BadRequestError("Email doesn't exist");
+
+  const code = Math.floor(100000 + Math.random() * 900000);
+
+  const options = resetPasswordEmail(email, code);
+
+  const response = await sendEmail(options);
+
+  if (!response) throw new BadRequestError("Couldn't send Email");
+
+  await client.setEx(email, 60 * 5, JSON.stringify(code));
+
+  res.status(201).send({ email });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { email, password, code } = req.body;
+
+  const value = await client.get(email);
+
+  if (!value) throw new BadRequestError("Code expired");
+
+  if (value != code) throw new BadRequestError("Wrong code");
+
+  const user = await User.findOne({ email });
+
+  if (!user) throw new BadRequestError("Email doesn't exist");
+
+  user.set({ password: password });
+
+  user.save();
+
+  res.status(200).send({ email });
 };
 
 export const getUser = async (req: Request, res: Response) => {

@@ -15,6 +15,8 @@ import {
   storeValue,
   retrieveValue,
   confirmEmail,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -26,6 +28,8 @@ import {
   phoneValidator,
   confirmPhoneValidator,
   emailValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
 } from "../validators/auth";
 import { requireAuth, validateRequest } from "../middlewares";
 import passport from "passport";
@@ -54,6 +58,19 @@ router.put(
   updatePasswordValidator,
   validateRequest,
   updateUserPassword
+);
+
+router.post(
+  "/forgotPassword",
+  forgotPasswordValidator,
+  validateRequest,
+  forgotPassword
+);
+router.post(
+  "/resetPassword",
+  resetPasswordValidator,
+  validateRequest,
+  resetPassword
 );
 
 router.post("/sendEmailCode", emailValidator, validateRequest, sendEmailCode);
