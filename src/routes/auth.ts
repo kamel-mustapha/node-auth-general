@@ -17,6 +17,9 @@ import {
   confirmEmail,
   forgotPassword,
   resetPassword,
+  forgotPasswordVaiPasswordToken,
+  verifyPasswordToken,
+  resetPasswordVaiPasswordToken,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -30,9 +33,15 @@ import {
   emailValidator,
   forgotPasswordValidator,
   resetPasswordValidator,
+  verifyResetPasswordValidator,
 } from "../validators/auth";
-import { requireAuth, validateRequest } from "../middlewares";
+import {
+  requireAuth,
+  validateRequest,
+  passwordTokenHandler,
+} from "../middlewares";
 import passport from "passport";
+import validate from "deep-email-validator";
 
 const router = express.Router();
 
@@ -91,5 +100,26 @@ router.get("/require", requireAuth, (req, res) => {
   console.log("you are here");
   res.send("you are authorized");
 });
+
+router.post(
+  "/forgotPasswordVaiPasswordToken",
+  forgotPasswordValidator,
+  validateRequest,
+  forgotPasswordVaiPasswordToken
+);
+router.post(
+  "/verifyPasswordToken",
+  verifyResetPasswordValidator,
+  validateRequest,
+  passwordTokenHandler,
+  verifyPasswordToken
+);
+router.post(
+  "/resetPasswordVaiPasswordToken",
+  resetPasswordValidator,
+  validateRequest,
+  passwordTokenHandler,
+  resetPasswordVaiPasswordToken
+);
 
 export default router;

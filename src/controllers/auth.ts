@@ -126,6 +126,62 @@ export const forgotPassword = async (req: Request, res: Response) => {
   res.status(201).send({ email });
 };
 
+export const forgotPasswordVaiPasswordToken = async (
+  req: Request,
+  res: Response
+) => {
+  const { email } = req.body;
+
+  const existingUser = await User.findOne({ email });
+
+  if (!existingUser) throw new BadRequestError("Email doesn't exist");
+
+  const code = Math.floor(100000 + Math.random() * 900000);
+
+  const options = resetPasswordEmail(email, code);
+
+  const response = await sendEmail(options);
+
+  if (!response) throw new BadRequestError("Couldn't send Email");
+
+  const resetPasswordToken = jwt.sign(
+    {
+      resetCode: code,
+    },
+    process.env.JWT_PASSWORD_KEY!,
+    {
+      expiresIn: process.env.JWT_PASSWORD_DURATION!,
+    }
+  );
+
+  existingUser.set({ resetPasswordToken });
+
+  await existingUser.save();
+
+  res.status(201).send({ email });
+};
+
+export const verifyPasswordToken = async (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  return res.status(200).send({ success: true });
+};
+
+export const resetPasswordVaiPasswordToken = async (
+  req: Request,
+  res: Response
+) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) throw new BadRequestError("Email doesn't exist");
+
+  user.set({ password: password });
+
+  await user.save();
+
+  return res.status(200).send({ email });
+};
+
 export const resetPassword = async (req: Request, res: Response) => {
   const { email, password, code } = req.body;
 

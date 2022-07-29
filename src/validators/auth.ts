@@ -60,6 +60,14 @@ export const forgotPasswordValidator = [
   body("email").isEmail().withMessage("you must supply a valid code"),
 ];
 
+export const verifyResetPasswordValidator = [
+  body("email").isEmail().withMessage("Email must be valid"),
+  body("code")
+    .isNumeric()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("you must supply Email verification code"),
+];
+
 export const resetPasswordValidator = [
   body("email").isEmail().withMessage("Email must be valid"),
   body("password")

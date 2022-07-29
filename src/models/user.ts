@@ -20,6 +20,7 @@ interface UserDoc extends mongoose.Document<any> {
   email: string;
   phone: string;
   password: string;
+  resetPasswordToken: string;
   googleId: string;
 }
 
@@ -51,6 +52,10 @@ const userSchema = new mongoose.Schema(
       select: false,
       required: true,
     },
+    resetPasswordToken: {
+      type: String,
+      select: false,
+    },
     googleId: {
       type: String,
     },
@@ -64,6 +69,7 @@ const userSchema = new mongoose.Schema(
         delete ret.firstName;
         delete ret.lastName;
         delete ret.password;
+        delete ret.resetPasswordToken;
         delete ret.__v;
       },
     },
