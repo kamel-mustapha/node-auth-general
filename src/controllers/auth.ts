@@ -312,11 +312,6 @@ export const retrieveValue = async (req: Request, res: Response) => {
   res.status(201).send({ value, timeLeft });
 };
 
-export const uploadPicture = async (req: Request, res: Response) => {
-  const response = await drive.uploadFile("1vfSodaxXWjYyZVAy4d7n6NQZwXBRkQmK");
-  console.log(response);
-};
-
 export const uploadProfilePictureToDrive = async (
   req: Request,
   res: Response
@@ -346,7 +341,7 @@ export const uploadProfilePictureToDrive = async (
 
       await user.save();
     } else {
-      const response = await drive.uploadViaMulter(file, user.id);
+      const response = await drive.uploadFile(file, user.id);
 
       if (!response) throw new BadRequestError("Server Error, try later");
 

@@ -21,7 +21,6 @@ import {
   forgotPasswordViaPasswordToken,
   verifyPasswordToken,
   resetPasswordVaiPasswordToken,
-  uploadPicture,
   uploadProfilePictureToDrive,
   checkEmailExistence,
   checkUsernameExistence,
@@ -40,7 +39,6 @@ import {
   forgotPasswordValidator,
   resetPasswordValidator,
   verifyResetPasswordValidator,
-  uploadPictureValidator,
   phoneNumberValidator,
   usernameValidator,
 } from "../validators/auth";
@@ -106,11 +104,6 @@ router.post(
 router.post("/storeValue", storeValue);
 router.post("/retrieveValue", retrieveValue);
 
-router.get("/require", requireAuth, (req, res) => {
-  console.log("you are here");
-  res.send("you are authorized");
-});
-
 router.post(
   "/forgotPasswordViaPasswordToken",
   forgotPasswordValidator,
@@ -131,12 +124,11 @@ router.post(
   passwordTokenHandler,
   resetPasswordVaiPasswordToken
 );
-
-router.post("/uploadFile", uploadPicture);
 router.post(
   "/uploadProfilePicture/:id",
+  requireAuth,
   upload.single("file"),
-  uploadPictureValidator,
+  userIdValidator,
   validateRequest,
   uploadProfilePictureToDrive
 );

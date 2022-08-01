@@ -124,7 +124,3 @@ export const phoneNumberValidator = [
     .isMobilePhone("any")
     .withMessage("you must supply a valid phone"),
 ];
-
-export const uploadPictureValidator = [
-  param("id").isMongoId().withMessage("Invalid ID"),
-];

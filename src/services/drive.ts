@@ -21,20 +21,22 @@ const drive = google.drive({
 const filePath = path.join(__dirname, "bounechada.JPG");
 
 class Drive {
-  async uploadFile(fileId: string) {
+  async uploadFile(file: Express.Multer.File, fileName: string) {
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(file.buffer);
+
     try {
       const response = await drive.files.create({
         requestBody: {
-          name: "hosni.JPG",
-          mimeType: "image/jpg",
+          name: fileName,
+          mimeType: file.mimetype,
         },
         media: {
-          mimeType: "image/jpg",
-          body: fs.createReadStream(filePath),
+          mimeType: file.mimetype,
+          body: bufferStream,
         },
       });
-      console.log(response.data);
-      return response.data.id;
+      return response.data;
     } catch (error: any) {
       console.log(error.message);
       return null;
@@ -52,28 +54,6 @@ class Drive {
     try {
       const response = await drive.files.update({
         fileId: fileId,
-        requestBody: {
-          name: fileName,
-          mimeType: file.mimetype,
-        },
-        media: {
-          mimeType: file.mimetype,
-          body: bufferStream,
-        },
-      });
-      return response.data;
-    } catch (error: any) {
-      console.log(error.message);
-      return null;
-    }
-  }
-
-  async uploadViaMulter(file: Express.Multer.File, fileName: string) {
-    const bufferStream = new stream.PassThrough();
-    bufferStream.end(file.buffer);
-
-    try {
-      const response = await drive.files.create({
         requestBody: {
           name: fileName,
           mimeType: file.mimetype,
