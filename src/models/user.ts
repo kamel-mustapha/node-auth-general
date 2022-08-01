@@ -22,6 +22,8 @@ interface UserDoc extends mongoose.Document<any> {
   password: string;
   resetPasswordToken: string;
   googleId: string;
+  picture: String;
+  thumbnail: String;
 }
 
 const userSchema = new mongoose.Schema(
@@ -57,6 +59,12 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     googleId: {
+      type: String,
+    },
+    picture: {
+      type: String,
+    },
+    thumbnail: {
       type: String,
     },
   },

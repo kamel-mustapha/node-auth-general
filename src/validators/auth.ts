@@ -57,7 +57,7 @@ export const updatePasswordValidator = [
 ];
 
 export const forgotPasswordValidator = [
-  body("email").isEmail().withMessage("you must supply a valid code"),
+  body("email").isEmail().withMessage("you must supply a valid Email"),
 ];
 
 export const verifyResetPasswordValidator = [
@@ -111,4 +111,8 @@ export const confirmPhoneValidator = [
 
 export const emailValidator = [
   body("email").isEmail().withMessage("you must supply a valid code"),
+];
+
+export const uploadPictureValidator = [
+  param("id").isMongoId().withMessage("Invalid ID"),
 ];

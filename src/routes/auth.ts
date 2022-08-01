@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import {
   currentUser,
   signIn,
@@ -20,6 +21,8 @@ import {
   forgotPasswordVaiPasswordToken,
   verifyPasswordToken,
   resetPasswordVaiPasswordToken,
+  uploadPicture,
+  uploadProfilePictureToDrive,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -34,6 +37,7 @@ import {
   forgotPasswordValidator,
   resetPasswordValidator,
   verifyResetPasswordValidator,
+  uploadPictureValidator,
 } from "../validators/auth";
 import {
   requireAuth,
@@ -42,6 +46,8 @@ import {
 } from "../middlewares";
 import passport from "passport";
 import validate from "deep-email-validator";
+
+const upload = multer();
 
 const router = express.Router();
 
@@ -120,6 +126,15 @@ router.post(
   validateRequest,
   passwordTokenHandler,
   resetPasswordVaiPasswordToken
+);
+
+router.post("/uploadFile", uploadPicture);
+router.post(
+  "/uploadProfilePicture/:id",
+  upload.single("file"),
+  uploadPictureValidator,
+  validateRequest,
+  uploadProfilePictureToDrive
 );
 
 export default router;

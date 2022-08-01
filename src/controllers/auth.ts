@@ -11,10 +11,12 @@ import {
   TWILIO_STATUS,
   sendEmail,
 } from "../services";
+import client from "../services/redis";
+import drive from "../services/drive";
+
+// const upload = multer();
 
 import { confirmationEmail, resetPasswordEmail } from "../types/email";
-
-import client from "../services/redis";
 
 export const currentUser = async (req: Request, res: Response) => {
   res.send({ currentUser: req.user || null });
@@ -307,4 +309,53 @@ export const retrieveValue = async (req: Request, res: Response) => {
   const value = await client.get(id);
   const timeLeft = await client.ttl(id);
   res.status(201).send({ value, timeLeft });
+};
+
+export const uploadPicture = async (req: Request, res: Response) => {
+  const response = await drive.uploadFile("1vfSodaxXWjYyZVAy4d7n6NQZwXBRkQmK");
+  console.log(response);
+};
+
+export const uploadProfilePictureToDrive = async (
+  req: Request,
+  res: Response
+) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) throw new BadRequestError("no user found");
+
+  if (!req.file) throw new BadRequestError("No file selected!");
+
+  const file = req.file as Express.Multer.File;
+
+  if (!file.mimetype.startsWith("image"))
+    throw new BadRequestError("Only images allowed!");
+
+  if (file.size > 1000000) throw new BadRequestError("Only 1MB");
+
+  try {
+    const picture = user.picture.split("/d/")[1];
+
+    if (picture != process.env.DEFAULT_PICTURE) {
+      const response = await drive.updateFile(file, user.id, picture);
+
+      if (!response) throw new BadRequestError("Server Error, try later");
+
+      await user.save();
+    } else {
+      const response = await drive.uploadViaMulter(file, user.id);
+
+      if (!response) throw new BadRequestError("Server Error, try later");
+
+      user.picture = `${process.env.GOOGLE_PHOTOS_URL}${response.id}`;
+
+      await user.save();
+    }
+
+    res.status(200).send(user);
+  } catch (error: any) {
+    res.send(error.message);
+  }
 };
