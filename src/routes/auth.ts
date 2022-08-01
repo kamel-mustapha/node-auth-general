@@ -18,11 +18,14 @@ import {
   confirmEmail,
   forgotPassword,
   resetPassword,
-  forgotPasswordVaiPasswordToken,
+  forgotPasswordViaPasswordToken,
   verifyPasswordToken,
   resetPasswordVaiPasswordToken,
   uploadPicture,
   uploadProfilePictureToDrive,
+  checkEmailExistence,
+  checkUsernameExistence,
+  checkPhoneExistence,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -38,6 +41,8 @@ import {
   resetPasswordValidator,
   verifyResetPasswordValidator,
   uploadPictureValidator,
+  phoneNumberValidator,
+  usernameValidator,
 } from "../validators/auth";
 import {
   requireAuth,
@@ -45,7 +50,6 @@ import {
   passwordTokenHandler,
 } from "../middlewares";
 import passport from "passport";
-import validate from "deep-email-validator";
 
 const upload = multer();
 
@@ -108,10 +112,10 @@ router.get("/require", requireAuth, (req, res) => {
 });
 
 router.post(
-  "/forgotPasswordVaiPasswordToken",
+  "/forgotPasswordViaPasswordToken",
   forgotPasswordValidator,
   validateRequest,
-  forgotPasswordVaiPasswordToken
+  forgotPasswordViaPasswordToken
 );
 router.post(
   "/verifyPasswordToken",
@@ -135,6 +139,24 @@ router.post(
   uploadPictureValidator,
   validateRequest,
   uploadProfilePictureToDrive
+);
+router.post(
+  "/checkUsernameExistence",
+  usernameValidator,
+  validateRequest,
+  checkUsernameExistence
+);
+router.post(
+  "/checkEmailExistence",
+  emailValidator,
+  validateRequest,
+  checkEmailExistence
+);
+router.post(
+  "/checkPhoneExistence",
+  phoneNumberValidator,
+  validateRequest,
+  checkPhoneExistence
 );
 
 export default router;

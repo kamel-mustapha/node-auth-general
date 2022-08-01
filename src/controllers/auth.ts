@@ -14,8 +14,6 @@ import {
 import client from "../services/redis";
 import drive from "../services/drive";
 
-// const upload = multer();
-
 import { confirmationEmail, resetPasswordEmail } from "../types/email";
 
 export const currentUser = async (req: Request, res: Response) => {
@@ -34,10 +32,13 @@ export const signUp = async (req: Request, res: Response) => {
   if (!value) throw new BadRequestError("Code expired");
 
   if (value != code) throw new BadRequestError("Wrong code");
-
+  const username = `${firstName}.${lastName}${Math.floor(
+    100 + Math.random() * 900
+  )}`;
   const user = User.build({
     firstName,
     lastName,
+    username,
     email,
     password,
   });
@@ -128,7 +129,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
   res.status(201).send({ email });
 };
 
-export const forgotPasswordVaiPasswordToken = async (
+export const forgotPasswordViaPasswordToken = async (
   req: Request,
   res: Response
 ) => {
@@ -358,4 +359,26 @@ export const uploadProfilePictureToDrive = async (
   } catch (error: any) {
     res.send(error.message);
   }
+};
+
+export const checkUsernameExistence = async (req: Request, res: Response) => {
+  const { username } = req.body;
+  const exist = await User.exists({ username });
+  if (exist) throw new BadRequestError("Username is already used");
+  res.status(200).send({ success: true });
+};
+
+export const checkEmailExistence = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const exist = await User.exists({ email });
+  console.log("result:", exist);
+  if (exist) throw new BadRequestError("Email is already used");
+  res.status(200).send({ success: true });
+};
+
+export const checkPhoneExistence = async (req: Request, res: Response) => {
+  const { phone } = req.body;
+  const exist = await User.exists({ phone });
+  if (exist) throw new BadRequestError("Phone is already used");
+  res.status(200).send({ success: true });
 };

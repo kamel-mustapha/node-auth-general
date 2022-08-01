@@ -109,8 +109,20 @@ export const confirmPhoneValidator = [
     .withMessage("you must supply a valid code"),
 ];
 
+export const usernameValidator = [
+  body("username")
+    .isLength({ min: 6, max: 25 })
+    .withMessage("you must supply a valid username"),
+];
+
 export const emailValidator = [
   body("email").isEmail().withMessage("you must supply a valid code"),
+];
+
+export const phoneNumberValidator = [
+  body("phone")
+    .isMobilePhone("any")
+    .withMessage("you must supply a valid phone"),
 ];
 
 export const uploadPictureValidator = [

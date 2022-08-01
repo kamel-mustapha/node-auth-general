@@ -4,6 +4,7 @@ import { PasswordHash } from "../services/hash-password";
 interface UserAttrs {
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   phone?: string;
   password: string;
@@ -17,6 +18,7 @@ interface UserModel extends mongoose.Model<UserDoc> {
 interface UserDoc extends mongoose.Document<any> {
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   phone: string;
   password: string;
@@ -41,6 +43,13 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       minLength: [1, "last name must be more then 1 character"],
       maxLength: [25, "last name can not be more than 25 characters"],
+    },
+    username: {
+      type: String,
+      required: true,
+      lowercase: true,
+      minlength: [6, "Username must be more than 5 characters"],
+      maxLength: [25, "Username can not be more than 25 characters"],
     },
     email: {
       type: String,
