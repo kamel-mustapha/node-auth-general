@@ -16,8 +16,8 @@ import {
   storeValue,
   retrieveValue,
   confirmEmail,
-  forgotPassword,
-  resetPassword,
+  forgotPasswordViaRedis,
+  resetPasswordViaRedis,
   forgotPasswordViaPasswordToken,
   verifyPasswordToken,
   resetPasswordVaiPasswordToken,
@@ -78,16 +78,16 @@ router.put(
 );
 
 router.post(
-  "/forgotPassword",
+  "/forgotPasswordViaRedis",
   forgotPasswordValidator,
   validateRequest,
-  forgotPassword
+  forgotPasswordViaRedis
 );
 router.post(
-  "/resetPassword",
+  "/resetPasswordViaRedis",
   resetPasswordValidator,
   validateRequest,
-  resetPassword
+  resetPasswordViaRedis
 );
 
 router.post("/sendEmailCode", emailValidator, validateRequest, sendEmailCode);
@@ -118,7 +118,7 @@ router.post(
   verifyPasswordToken
 );
 router.post(
-  "/resetPasswordVaiPasswordToken",
+  "/resetPasswordViaPasswordToken",
   resetPasswordValidator,
   validateRequest,
   passwordTokenHandler,

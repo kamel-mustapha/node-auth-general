@@ -15,11 +15,11 @@ import client from "../services/redis";
 import drive from "../services/drive";
 
 import { confirmationEmail, resetPasswordEmail } from "../types/email";
-
+// Get the Current User
 export const currentUser = async (req: Request, res: Response) => {
   res.send({ currentUser: req.user || null });
 };
-
+// Register new User in the DB after Email Confirmation.
 export const signUp = async (req: Request, res: Response) => {
   const { firstName, lastName, email, password, code } = req.body;
 
@@ -56,7 +56,7 @@ export const signUp = async (req: Request, res: Response) => {
   };
   res.status(201).send(user);
 };
-
+// Login User
 export const signIn = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -84,12 +84,12 @@ export const signIn = async (req: Request, res: Response) => {
   };
   res.status(200).send(existingUser);
 };
-
+// Sign out
 export const signOut = async (req: Request, res: Response) => {
   req.session = null;
   res.send({});
 };
-
+// Update some user fields.
 export const updateUser = async (req: Request, res: Response) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new BadRequestError("Invalid credentials");
@@ -97,7 +97,7 @@ export const updateUser = async (req: Request, res: Response) => {
   user.save();
   res.status(200).send(user);
 };
-
+// Update user password.
 export const updateUserPassword = async (req: Request, res: Response) => {
   const { password, newPassword } = req.body;
   const user = await User.findById(req.params.id).select("+password");
@@ -108,8 +108,8 @@ export const updateUserPassword = async (req: Request, res: Response) => {
   user.save();
   res.status(200).send({});
 };
-
-export const forgotPassword = async (req: Request, res: Response) => {
+// implementing the forgot password scenario using redis.
+export const forgotPasswordViaRedis = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   const existingUser = await User.findOne({ email });
@@ -128,64 +128,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
   res.status(201).send({ email });
 };
-
-export const forgotPasswordViaPasswordToken = async (
-  req: Request,
-  res: Response
-) => {
-  const { email } = req.body;
-
-  const existingUser = await User.findOne({ email });
-
-  if (!existingUser) throw new BadRequestError("Email doesn't exist");
-
-  const code = Math.floor(100000 + Math.random() * 900000);
-
-  const options = resetPasswordEmail(email, code);
-
-  const response = await sendEmail(options);
-
-  if (!response) throw new BadRequestError("Couldn't send Email");
-
-  const resetPasswordToken = jwt.sign(
-    {
-      resetCode: code,
-    },
-    process.env.JWT_PASSWORD_KEY!,
-    {
-      expiresIn: process.env.JWT_PASSWORD_DURATION!,
-    }
-  );
-
-  existingUser.set({ resetPasswordToken });
-
-  await existingUser.save();
-
-  res.status(201).send({ email });
-};
-
-export const verifyPasswordToken = async (req: Request, res: Response) => {
-  const { email, code } = req.body;
-  return res.status(200).send({ success: true });
-};
-
-export const resetPasswordVaiPasswordToken = async (
-  req: Request,
-  res: Response
-) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-
-  if (!user) throw new BadRequestError("Email doesn't exist");
-
-  user.set({ password: password });
-
-  await user.save();
-
-  return res.status(200).send({ email });
-};
-
-export const resetPassword = async (req: Request, res: Response) => {
+// implementing the reset password scenario using redis.
+export const resetPasswordViaRedis = async (req: Request, res: Response) => {
   const { email, password, code } = req.body;
 
   const value = await client.get(email);
@@ -204,20 +148,78 @@ export const resetPassword = async (req: Request, res: Response) => {
 
   res.status(200).send({ email });
 };
+// implementing the forgot password scenario using stored token in the DB.
+export const forgotPasswordViaPasswordToken = async (
+  req: Request,
+  res: Response
+) => {
+  const { email } = req.body;
 
+  const existingUser = await User.findOne({ email });
+
+  if (!existingUser) throw new BadRequestError("Email doesn't exist");
+
+  const code = Math.floor(100000 + Math.random() * 900000);
+
+  const options = resetPasswordEmail(email, code);
+
+  const response = await sendEmail(options);
+
+  if (!response) throw new BadRequestError("Couldn't send Email");
+
+  const hashedCode = await PasswordHash.toHash(code.toString());
+
+  const resetPasswordToken = jwt.sign(
+    {
+      resetCode: hashedCode,
+    },
+    process.env.JWT_PASSWORD_KEY!,
+    {
+      expiresIn: process.env.JWT_PASSWORD_DURATION!,
+    }
+  );
+
+  existingUser.set({ resetPasswordToken });
+
+  await existingUser.save();
+
+  res.status(201).send({ email });
+};
+// checking the provided code using stored token in the DB.
+export const verifyPasswordToken = async (req: Request, res: Response) => {
+  const { email, code } = req.body;
+  return res.status(200).send({ success: true });
+};
+// implementing the reset password scenario using stored token in the DB.
+export const resetPasswordVaiPasswordToken = async (
+  req: Request,
+  res: Response
+) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) throw new BadRequestError("Email doesn't exist");
+
+  user.set({ password: password });
+
+  await user.save();
+
+  return res.status(200).send({ email });
+};
+// Getting user by its ID.
 export const getUser = async (req: Request, res: Response) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new BadRequestError("Invalid credentials");
   res.status(200).send(user);
 };
-
+// Removing user by its ID.
 export const deleteUser = async (req: Request, res: Response) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new BadRequestError("Invalid credentials");
   user.remove();
   res.status(204).send({});
 };
-
+// find users by their fullNames.
 export const findUsers = async (req: Request, res: Response) => {
   const users = await User.aggregate(
     findUsersPL(req.params.id, req.body.input)
@@ -225,7 +227,7 @@ export const findUsers = async (req: Request, res: Response) => {
   if (!users) throw new BadRequestError("Invalid credentials");
   res.status(200).send(users);
 };
-
+// Sending phone code to register a valid phone number.
 export const sendPhoneSMS = async (req: Request, res: Response) => {
   const { phone } = req.body;
 
@@ -237,7 +239,7 @@ export const sendPhoneSMS = async (req: Request, res: Response) => {
   if (status == TWILIO_STATUS.PENDING) return res.status(201).send({ phone });
   throw new BadRequestError("Try Again");
 };
-
+// verifying the phone number.
 export const confirmPhone = async (req: Request, res: Response) => {
   const { id, phone, code } = req.body;
 
@@ -255,7 +257,7 @@ export const confirmPhone = async (req: Request, res: Response) => {
   }
   throw new BadRequestError("Please try later!");
 };
-
+// Sending Confirmation Code to the provided Email.
 export const sendEmailCode = async (req: Request, res: Response) => {
   const { email } = req.body;
 
@@ -280,7 +282,7 @@ export const sendEmailCode = async (req: Request, res: Response) => {
 
   res.status(201).send({ email });
 };
-
+// Checking the provided email code with the true one, and validate Email.
 export const confirmEmail = async (req: Request, res: Response) => {
   const { id, email, code } = req.body;
 
@@ -298,20 +300,20 @@ export const confirmEmail = async (req: Request, res: Response) => {
   user.save();
   res.status(201).send(user);
 };
-
+// test Redis storing key values.
 export const storeValue = async (req: Request, res: Response) => {
   const { id, value } = req.body;
   await client.setEx(id, 60 * 5, JSON.stringify(value));
   res.status(201).send({ value });
 };
-
+// retrieve the value of specific Key.
 export const retrieveValue = async (req: Request, res: Response) => {
   const { id } = req.body;
   const value = await client.get(id);
   const timeLeft = await client.ttl(id);
   res.status(201).send({ value, timeLeft });
 };
-
+// Uploading Profile pictures using Multer to Google Drive directly.
 export const uploadProfilePictureToDrive = async (
   req: Request,
   res: Response
@@ -355,14 +357,14 @@ export const uploadProfilePictureToDrive = async (
     res.send({ errors: error.message });
   }
 };
-
+// Check whether username exist or not.
 export const checkUsernameExistence = async (req: Request, res: Response) => {
   const { username } = req.body;
   const exist = await User.exists({ username });
   if (exist) throw new BadRequestError("Username is already used");
   res.status(200).send({ success: true });
 };
-
+// Check whether Email exist or not.
 export const checkEmailExistence = async (req: Request, res: Response) => {
   const { email } = req.body;
   const exist = await User.exists({ email });
@@ -370,7 +372,7 @@ export const checkEmailExistence = async (req: Request, res: Response) => {
   if (exist) throw new BadRequestError("Email is already used");
   res.status(200).send({ success: true });
 };
-
+// Check whether Phone Number exist or not.
 export const checkPhoneExistence = async (req: Request, res: Response) => {
   const { phone } = req.body;
   const exist = await User.exists({ phone });

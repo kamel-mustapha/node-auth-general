@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models";
+import { PasswordHash } from "../services";
 import { BadRequestError } from "../errors";
-
 interface Payload {
   resetCode: number;
 }
@@ -23,9 +23,13 @@ export const passwordTokenHandler = async (
       user.resetPasswordToken,
       process.env.JWT_PASSWORD_KEY!
     ) as Payload;
-    if (payload.resetCode === code) return next();
 
-    throw new BadRequestError("Wrong or expired Code!");
+    const codeMatch = await PasswordHash.compare(
+      payload.resetCode.toString(),
+      code.toString()
+    );
+    if (!codeMatch) throw new BadRequestError("Wrong Code!");
+    return next();
   } catch (error) {
     throw new BadRequestError("Wrong or expired Code!");
   }
