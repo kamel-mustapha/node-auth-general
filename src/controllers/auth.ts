@@ -357,7 +357,7 @@ export const uploadProfilePictureToDrive = async (
 
     res.status(200).send(user);
   } catch (error: any) {
-    res.send(error.message);
+    res.send({ errors: error.message });
   }
 };
 

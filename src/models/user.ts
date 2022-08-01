@@ -72,9 +72,11 @@ const userSchema = new mongoose.Schema(
     },
     picture: {
       type: String,
+      default: `${process.env.GOOGLE_PHOTOS_URL}${process.env.DEFAULT_PICTURE}`,
     },
     thumbnail: {
       type: String,
+      default: `${process.env.GOOGLE_PHOTOS_URL}${process.env.DEFAULT_PICTURE}`,
     },
   },
   {

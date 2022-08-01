@@ -20,7 +20,6 @@ passport.deserializeUser(async (id, done) => {
   // if (user) done(null, user);
 });
 
-
 passport.use(
   new Strategy(
     {
@@ -29,14 +28,16 @@ passport.use(
       callbackURL: "/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
-      
       const existingUser = await User.findOne({ googleId: profile.id });
       if (existingUser) {
         return done(null, existingUser);
       }
+      const username = `${profile.name?.givenName!}.${profile.name
+        ?.familyName!}${Math.floor(100 + Math.random() * 900)}`;
       const user = User.build({
         firstName: profile.name?.givenName!,
         lastName: profile.name?.familyName!,
+        username,
         email: profile._json.email!,
         password: process.env.GOOGLE_DEFAULT_PASSWORD! || "123",
         googleId: profile.id!,
@@ -46,4 +47,3 @@ passport.use(
     }
   )
 );
-
