@@ -27,8 +27,9 @@ import {
   getHashRedis,
   setHashRedis,
   registerUser,
-  verifyAccount,
+  verifyAccountViaCode,
   updateEmail,
+  verifyAccountViaToken,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -40,11 +41,11 @@ import {
   phoneValidator,
   confirmPhoneValidator,
   emailValidator,
-  forgotPasswordValidator,
   resetPasswordValidator,
-  verifyResetPasswordValidator,
+  emailCodeValidator,
   phoneNumberValidator,
   usernameValidator,
+  confirmEmailValidator,
 } from "../validators/auth";
 import {
   requireAuth,
@@ -65,7 +66,14 @@ router.get(
   "/google",
   passport.authenticate("google", { scope: ["email", "profile"] })
 );
-router.post("/verifyAccount", verifyAccount);
+router.post(
+  "/verifyAccountViaCode",
+  emailCodeValidator,
+  validateRequest,
+  verifyAccountViaCode
+);
+router.get("/verifyAccountViaToken/:token", verifyAccountViaToken);
+
 router
   .route("/users/:id")
   .get(requireAuth, userIdValidator, validateRequest, getUser)
@@ -83,7 +91,7 @@ router.put(
 
 router.post(
   "/forgotPasswordViaRedis",
-  forgotPasswordValidator,
+  emailValidator,
   validateRequest,
   forgotPasswordViaRedis
 );
@@ -94,7 +102,20 @@ router.post(
   resetPasswordViaRedis
 );
 
-router.post("/sendEmailCode", emailValidator, validateRequest, sendEmailCode);
+router.post(
+  "/sendEmailCode",
+  requireAuth,
+  emailValidator,
+  validateRequest,
+  sendEmailCode
+);
+router.put(
+  "/updateEmail",
+  requireAuth,
+  confirmEmailValidator,
+  validateRequest,
+  updateEmail
+);
 
 router.post("/sendPhoneCode", phoneValidator, validateRequest, sendPhoneSMS);
 router.post(
@@ -104,18 +125,15 @@ router.post(
   confirmPhone
 );
 
-router.post("/storeValue", storeValue);
-router.post("/retrieveValue", retrieveValue);
-
 router.post(
   "/forgotPasswordViaPasswordToken",
-  forgotPasswordValidator,
+  emailValidator,
   validateRequest,
   forgotPasswordViaPasswordToken
 );
 router.post(
   "/verifyPasswordToken",
-  verifyResetPasswordValidator,
+  emailCodeValidator,
   validateRequest,
   passwordTokenHandler,
   verifyPasswordToken
@@ -153,10 +171,12 @@ router.post(
   validateRequest,
   checkPhoneExistence
 );
+// ----------------Test Functions------------------//
+router.post("/storeValue", storeValue);
+router.post("/retrieveValue", retrieveValue);
 
 router.post("/setHashRedis", setHashRedis);
 router.post("/getHashRedis", getHashRedis);
 router.post("/registerUser", registerUser);
-router.post("/updateEmail", updateEmail);
-
+// ------------------------------------------------//
 export default router;
