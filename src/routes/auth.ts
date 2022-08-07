@@ -28,6 +28,7 @@ import {
   setHashRedis,
   registerUser,
   verifyAccount,
+  updateEmail,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -156,5 +157,6 @@ router.post(
 router.post("/setHashRedis", setHashRedis);
 router.post("/getHashRedis", getHashRedis);
 router.post("/registerUser", registerUser);
+router.post("/updateEmail", updateEmail);
 
 export default router;

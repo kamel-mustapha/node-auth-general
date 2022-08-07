@@ -325,6 +325,8 @@ export const updateEmail = async (req: Request, res: Response) => {
 
   user.set({ email });
   user.save();
+
+  res.status(201).send({ email });
 };
 // test Redis storing key values.
 export const storeValue = async (req: Request, res: Response) => {
