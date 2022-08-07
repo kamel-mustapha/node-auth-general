@@ -1,12 +1,31 @@
-import { body, check, param } from "express-validator";
+import { body, check, oneOf, param } from "express-validator";
 
 export const signInValidator = [
-  body("email").isEmail().withMessage("Email must be valid"),
-  body("password")
-    .trim()
-    .notEmpty()
-    .isLength({ min: 6, max: 50 })
-    .withMessage("you must supply a valid password"),
+  oneOf(
+    [
+      [
+        body("email").isEmail().withMessage("Email must be valid"),
+        body("password")
+          .trim()
+          .notEmpty()
+          .isLength({ min: 6, max: 50 })
+          .withMessage("you must supply a valid password"),
+        body("username").not().exists().withMessage("Invalid Input"),
+      ],
+      [
+        body("username")
+          .isLength({ min: 6, max: 25 })
+          .withMessage("you must supply a valid username"),
+        body("password")
+          .trim()
+          .notEmpty()
+          .isLength({ min: 6, max: 50 })
+          .withMessage("you must supply a valid password"),
+        body("email").not().exists().withMessage("Invalid Input"),
+      ],
+    ],
+    "Invalid Credentials"
+  ),
 ];
 
 export const signUpValidator = [
@@ -22,10 +41,6 @@ export const signUpValidator = [
     .notEmpty()
     .isLength({ min: 6, max: 50 })
     .withMessage("you must supply a valid password"),
-  body("code")
-    .isNumeric()
-    .isLength({ min: 6, max: 6 })
-    .withMessage("you must supply Email verification code"),
 ];
 
 export const updateUserValidator = [
@@ -56,16 +71,12 @@ export const updatePasswordValidator = [
     .withMessage("you must supply a valid password"),
 ];
 
-export const forgotPasswordValidator = [
-  body("email").isEmail().withMessage("you must supply a valid Email"),
-];
-
-export const verifyResetPasswordValidator = [
+export const emailCodeValidator = [
   body("email").isEmail().withMessage("Email must be valid"),
   body("code")
     .isNumeric()
     .isLength({ min: 6, max: 6 })
-    .withMessage("you must supply Email verification code"),
+    .withMessage("you must supply a valid Email verification code"),
 ];
 
 export const resetPasswordValidator = [
@@ -78,7 +89,7 @@ export const resetPasswordValidator = [
   body("code")
     .isNumeric()
     .isLength({ min: 6, max: 6 })
-    .withMessage("you must supply Email verification code"),
+    .withMessage("you must supply a valid Email verification code"),
 ];
 
 export const userIdValidator = [
@@ -107,6 +118,15 @@ export const confirmPhoneValidator = [
   body("code")
     .isLength({ min: 1, max: 10 })
     .withMessage("you must supply a valid code"),
+];
+
+export const confirmEmailValidator = [
+  body("id").isMongoId().withMessage("Invalid ID"),
+  body("email").isEmail().withMessage("Email must be valid"),
+  body("code")
+    .isNumeric()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("you must supply a valid Email verification code"),
 ];
 
 export const usernameValidator = [
