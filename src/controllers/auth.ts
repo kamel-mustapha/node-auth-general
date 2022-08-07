@@ -21,17 +21,12 @@ export const currentUser = async (req: Request, res: Response) => {
 };
 // Register new User in the DB after Email Confirmation.
 export const signUp = async (req: Request, res: Response) => {
-  const { firstName, lastName, email, password, code } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
 
   if (existingUser) throw new BadRequestError("Email in use");
 
-  const value = await client.get(email);
-
-  if (!value) throw new BadRequestError("Code expired");
-
-  if (value != code) throw new BadRequestError("Wrong code");
   const username = `${firstName}.${lastName}${Math.floor(
     100 + Math.random() * 900
   )}`;
@@ -43,17 +38,17 @@ export const signUp = async (req: Request, res: Response) => {
     password,
   });
   await user.save();
-  const userJwt = jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-    },
-    process.env.JWT_KEY!
-  );
 
-  req.session = {
-    jwt: userJwt,
-  };
+  const code = Math.floor(100000 + Math.random() * 900000);
+
+  const options = confirmationEmail(email, code);
+
+  const response = await sendEmail(options);
+
+  if (!response) throw new BadRequestError("Couldn't send Email");
+
+  await client.setEx(email, 60 * 5, JSON.stringify(code));
+
   res.status(201).send(user);
 };
 // Login User
@@ -88,6 +83,38 @@ export const signIn = async (req: Request, res: Response) => {
 export const signOut = async (req: Request, res: Response) => {
   req.session = null;
   res.send({});
+};
+// Verify the provided email code with the true one, and validate Account.
+export const verifyAccount = async (req: Request, res: Response) => {
+  const { email, code } = req.body;
+
+  const value = await client.get(email);
+
+  if (!value) throw new BadRequestError("Code expired");
+
+  if (value != code) throw new BadRequestError("Wrong code");
+
+  const user = await User.findOne({ email });
+
+  if (!user)
+    throw new BadRequestError("Couldn't find account with provided email");
+
+  user.set({ verified: true });
+  user.save();
+
+  const userJwt = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+    },
+    process.env.JWT_KEY!
+  );
+
+  req.session = {
+    jwt: userJwt,
+  };
+
+  res.status(201).send(user);
 };
 // Update some user fields.
 export const updateUser = async (req: Request, res: Response) => {
@@ -282,8 +309,7 @@ export const sendEmailCode = async (req: Request, res: Response) => {
 
   res.status(201).send({ email });
 };
-// Checking the provided email code with the true one, and validate Email.
-export const confirmEmail = async (req: Request, res: Response) => {
+export const updateEmail = async (req: Request, res: Response) => {
   const { id, email, code } = req.body;
 
   const value = await client.get(email);
@@ -294,11 +320,11 @@ export const confirmEmail = async (req: Request, res: Response) => {
 
   const user = await User.findById(id);
 
-  if (!user) throw new BadRequestError("Wrong user ID");
+  if (!user)
+    throw new BadRequestError("Couldn't find account with provided email");
 
   user.set({ email });
   user.save();
-  res.status(201).send(user);
 };
 // test Redis storing key values.
 export const storeValue = async (req: Request, res: Response) => {
@@ -378,4 +404,32 @@ export const checkPhoneExistence = async (req: Request, res: Response) => {
   const exist = await User.exists({ phone });
   if (exist) throw new BadRequestError("Phone is already used");
   res.status(200).send({ success: true });
+};
+
+export const setHashRedis = async (req: Request, res: Response) => {
+  const { userName, firstName, lastName, email, password } = req.body;
+  // await client.setEx(email, 60 * 5, JSON.stringify(code));
+  await client.hSet(email, req.body);
+  await client.expire(email, 60 * 60 * 24 * 3);
+  res.status(200).send({});
+};
+export const getHashRedis = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await client.hGetAll(email);
+  console.log(result);
+  console.log(result.userName);
+  res.status(200).send(result);
+};
+
+export const registerUser = async (req: Request, res: Response) => {
+  const { username, firstName, lastName, email, password } = req.body;
+  const user = User.build({
+    firstName,
+    lastName,
+    username,
+    email,
+    password,
+  });
+  await user.save();
+  res.status(200).send(user);
 };

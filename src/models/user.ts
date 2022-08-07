@@ -9,6 +9,7 @@ interface UserAttrs {
   phone?: string;
   password: string;
   googleId?: string;
+  verified?: boolean;
 }
 
 interface UserModel extends mongoose.Model<UserDoc> {
@@ -26,6 +27,8 @@ interface UserDoc extends mongoose.Document<any> {
   googleId: string;
   picture: String;
   thumbnail: String;
+  verified: boolean;
+  expiresAt: Date;
 }
 
 const userSchema = new mongoose.Schema(
@@ -78,6 +81,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: `${process.env.GOOGLE_PHOTOS_URL}${process.env.DEFAULT_PICTURE}`,
     },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    expiresAt: {
+      type: Date,
+      default: () => new Date(+new Date() + 3 * 60 * 1000),
+    },
   },
   {
     toJSON: {
@@ -89,6 +100,8 @@ const userSchema = new mongoose.Schema(
         delete ret.lastName;
         delete ret.password;
         delete ret.resetPasswordToken;
+        delete ret.verified;
+        delete ret.expiresAt;
         delete ret.__v;
       },
     },
@@ -101,6 +114,14 @@ userSchema.pre("save", async function (done) {
     this.set("password", hashed);
   }
 });
+
+userSchema.index(
+  { expiresAt: 1 },
+  {
+    expireAfterSeconds: 0,
+    partialFilterExpression: { verified: false },
+  }
+);
 
 userSchema
   .virtual("fullName")

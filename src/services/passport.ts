@@ -41,6 +41,7 @@ passport.use(
         email: profile._json.email!,
         password: process.env.GOOGLE_DEFAULT_PASSWORD! || "123",
         googleId: profile.id!,
+        verified: true,
       });
       await user.save();
       return done(null, user);

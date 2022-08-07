@@ -15,7 +15,6 @@ import {
   sendEmailCode,
   storeValue,
   retrieveValue,
-  confirmEmail,
   forgotPasswordViaRedis,
   resetPasswordViaRedis,
   forgotPasswordViaPasswordToken,
@@ -25,6 +24,10 @@ import {
   checkEmailExistence,
   checkUsernameExistence,
   checkPhoneExistence,
+  getHashRedis,
+  setHashRedis,
+  registerUser,
+  verifyAccount,
 } from "../controllers/auth";
 import {
   findUsersValidator,
@@ -61,7 +64,7 @@ router.get(
   "/google",
   passport.authenticate("google", { scope: ["email", "profile"] })
 );
-
+router.post("/verifyAccount", verifyAccount);
 router
   .route("/users/:id")
   .get(requireAuth, userIdValidator, validateRequest, getUser)
@@ -91,7 +94,6 @@ router.post(
 );
 
 router.post("/sendEmailCode", emailValidator, validateRequest, sendEmailCode);
-router.post("/confirmEmailCode", confirmEmail);
 
 router.post("/sendPhoneCode", phoneValidator, validateRequest, sendPhoneSMS);
 router.post(
@@ -150,5 +152,9 @@ router.post(
   validateRequest,
   checkPhoneExistence
 );
+
+router.post("/setHashRedis", setHashRedis);
+router.post("/getHashRedis", getHashRedis);
+router.post("/registerUser", registerUser);
 
 export default router;
