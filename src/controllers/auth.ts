@@ -14,7 +14,11 @@ import {
 import client from "../services/redis";
 import drive from "../services/drive";
 
-import { confirmationEmail, resetPasswordEmail } from "../types/email";
+import {
+  confirmationEmail,
+  confirmationEmailViaLink,
+  resetPasswordEmail,
+} from "../types/email";
 // Get the Current User
 export const currentUser = async (req: Request, res: Response) => {
   res.send({ currentUser: req.user || null });
@@ -39,23 +43,49 @@ export const signUp = async (req: Request, res: Response) => {
   });
   await user.save();
 
-  const code = Math.floor(100000 + Math.random() * 900000);
+  // Account verification Using [6 Digits Code || Link] in Email
+  let CodeStrategy = false;
+  if (CodeStrategy) {
+    const code = Math.floor(100000 + Math.random() * 900000);
 
-  const options = confirmationEmail(email, code);
+    const options = confirmationEmail(email, code);
+
+    const response = await sendEmail(options);
+
+    if (!response) throw new BadRequestError("Couldn't send Email");
+
+    await client.setEx(email, 60 * 5, JSON.stringify(code));
+
+    return res.status(201).send(user);
+  }
+  const token = jwt.sign(
+    {
+      email,
+    },
+    process.env.JWT_KEY!,
+    {
+      expiresIn: process.env.JWT_PASSWORD_DURATION!,
+    }
+  );
+  const options = confirmationEmailViaLink(email, token);
 
   const response = await sendEmail(options);
 
   if (!response) throw new BadRequestError("Couldn't send Email");
-
-  await client.setEx(email, 60 * 5, JSON.stringify(code));
-
-  res.status(201).send(user);
+  res
+    .status(201)
+    .send({
+      success: true,
+      message: "Verification Link has been sent to your Email",
+    });
 };
 // Login User
 export const signIn = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
 
-  const existingUser = await User.findOne({ email }).select("+password");
+  const existingUser = await User.findOne(
+    email ? { email } : { username }
+  ).select("+password");
 
   if (!existingUser) throw new BadRequestError("Invalid credentials");
 
@@ -85,7 +115,7 @@ export const signOut = async (req: Request, res: Response) => {
   res.send({});
 };
 // Verify the provided email code with the true one, and validate Account.
-export const verifyAccount = async (req: Request, res: Response) => {
+export const verifyAccountViaCode = async (req: Request, res: Response) => {
   const { email, code } = req.body;
 
   const value = await client.get(email);
@@ -115,6 +145,29 @@ export const verifyAccount = async (req: Request, res: Response) => {
   };
 
   res.status(201).send(user);
+};
+// Verify Account Via Token Link
+interface EmailPayload {
+  email: string;
+}
+
+export const verifyAccountViaToken = async (req: Request, res: Response) => {
+  const { token } = req.params;
+  try {
+    const payload = jwt.verify(token, process.env.JWT_KEY!) as EmailPayload;
+    const { email } = payload;
+
+    const user = await User.findOne({ email });
+    if (!user)
+      throw new BadRequestError("Couldn't find account with provided email");
+
+    user.set({ verified: true });
+    user.save();
+
+    res.status(200).send(user);
+  } catch (error) {
+    throw new BadRequestError("Expired Link!");
+  }
 };
 // Update some user fields.
 export const updateUser = async (req: Request, res: Response) => {
@@ -309,6 +362,7 @@ export const sendEmailCode = async (req: Request, res: Response) => {
 
   res.status(201).send({ email });
 };
+// verify Email and Update
 export const updateEmail = async (req: Request, res: Response) => {
   const { id, email, code } = req.body;
 
